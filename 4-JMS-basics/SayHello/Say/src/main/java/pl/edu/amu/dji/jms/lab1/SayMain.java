@@ -1,6 +1,7 @@
 package pl.edu.amu.dji.jms.lab1;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.command.CommandTypes;
 
 import javax.jms.*;
 import java.io.BufferedReader;
@@ -26,10 +27,13 @@ public class SayMain {
         - set producer delivery mode to non persistent (DeliveryMode.NON_PERSISTENT);
          */
 
-        Connection connection = null;
-        Session session = null;
-        Destination queue = null;
-        MessageProducer producer = null;
+        Connection connection = connectionFactory.createConnection();
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Destination queue = session.createQueue("SayHelloQueue");
+        //Destination topic = session.createTopic("SayHelloTopic");
+        MessageProducer producer = session.createProducer(queue);
+        producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+        producer.setTimeToLive(3000);
 
 
         connection.start();
@@ -43,6 +47,10 @@ public class SayMain {
 
             //Create TextMessage from session with text variable
             //Send this message to queue (use producer for that)
+            TextMessage textMessage = session.createTextMessage(text);
+            boolean dots=text.contains(".");
+            textMessage.setBooleanProperty("dots", dots);
+            producer.send(textMessage);
         }
 
         //Close stuff
