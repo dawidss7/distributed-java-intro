@@ -21,4 +21,18 @@
         <constructor-arg value="offerTopic"/>
     </bean>
 
+    <bean id="offerService" class="pl.edu.amu.dji.jms.lab2.wholesaler.service.OfferService">
+        <property name="orderQueue" ref="orderQueue"/>
+        <property name="offerTopic" ref="offerTopic"/>
+        <property name="jmsTemplate" ref="jmsTemplate"/>
+    </bean>
+    <bean id="orderService" class="pl.edu.amu.dji.jms.lab2.wholesaler.service.OrderService">
+
+    </bean>
+    <bean id="messageListenerContainer" class="org.springframework.jms.listener.SimpleMessageListenerContainer">
+        <property name="messageListener" ref="orderService"/>
+        <property name="connectionFactory" ref="connectionFactory"/>
+        <property name="destination" ref="orderQueue"/>
+    </bean>
+
 </beans>
