@@ -13,6 +13,10 @@ public class SayMain {
 
     public static void main(String[] args) throws Exception {
         ConnectionFactory connectionFactory = new ActiveMQConnectionFactory("tcp://localhost:61616");
+        Connection connection = connectionFactory.createConnection();
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Destination queue = session.createQueue("SayHelloQueue");
+        MessageProducer producer = session.createProducer(queue);
 
         /*
         Create Connection instance from ConnectionFactory
@@ -37,11 +41,9 @@ public class SayMain {
 
 
         connection.start();
-
         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in));
-
-        String text = "";
-        while (!text.equalsIgnoreCase(EXIT)) {
+        String in = "";
+        while (!in.equalsIgnoreCase(EXIT)) {
             System.out.print("Say hello to:");
             text = bufferedReader.readLine();
 
@@ -51,9 +53,11 @@ public class SayMain {
             boolean dots=text.contains(".");
             textMessage.setBooleanProperty("dots", dots);
             producer.send(textMessage);
+            in = bufferedReader.readLine();
+            TextMessage message = session.createTextMessage(in);
+            producer.send(message);
         }
 
-        //Close stuff
         session.close();
         connection.close();
     }
