@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+                           http://www.springframework.org/schema/beans/spring-beans.xsd
+                           http://www.springframework.org/schema/tx
+                            http://www.springframework.org/schema/tx/spring-tx.xsd
+                            http://www.springframework.org/schema/context
+                            http://www.springframework.org/schema/context/spring-context.xsd
+                           ">
+
+    <tx:annotation-driven/>
+    <context:component-scan base-package="pl.edu.amu.dji.jms.lab4.pointOfSales.*"/>
+    <bean id="toUseConnectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory">
+        <property name="brokerURL" value="tcp://localhost:61616"/>
+    </bean>
+    <bean id="connectionFactory" class="org.apache.activemq.pool.PooledConnectionFactory" destroy-method="stop">
+        <property name="connectionFactory" ref="toUseConnectionFactory"/>
+    </bean>
+    <bean id="transactionManager" class="org.springframework.jms.connection.JmsTransactionManager">
+        <property name="connectionFactory" ref="connectionFactory"/>
+    </bean>
+
+
+    <bean id="fullProductListJmsTemplate" class="org.springframework.jms.core.JmsTemplate">
+        <property name="defaultDestination" ref="fullProductListTopic"/>
+        <property name="messageConverter" ref="fullProductListConverter"/>
+        <property name="connectionFactory" ref="connectionFactory"/>
+        <property name="sessionTransacted" value="true"/>
+    </bean>
+
+    <bean id="priceChangeJmsTemplate" class="org.springframework.jms.core.JmsTemplate">
+        <property name="defaultDestination" ref="priceChangeTopic"/>
+        <property name="messageConverter" ref="priceChangeConverter"/>
+        <property name="connectionFactory" ref="connectionFactory"/>
+        <property name="sessionTransacted" value="true"/>
+    </bean>
+
+    <bean id="reportJmsTemplate" class="org.springframework.jms.core.JmsTemplate">
+        <property name="defaultDestination" ref="reportQueue"/>
+        <property name="messageConverter" ref="salesInformationConverter"/>
+        <property name="connectionFactory" ref="connectionFactory"/>
+        <property name="sessionTransacted" value="true"/>
+    </bean>
+
+    <bean id="priceChangeTopic" class="org.apache.activemq.command.ActiveMQTopic">
+        <constructor-arg value="priceChangeTopic"/>
+    </bean>
+
+    <bean id="fullProductListConverter" class="pl.edu.amu.dji.jms.lab4.message.FullProductListConverter">
+    </bean>
+
+    <bean id="fullProductListTopic" class="org.apache.activemq.command.ActiveMQTopic">
+        <constructor-arg value="fullProductListTopic"/>
+    </bean>
+    <bean id="priceChangeConverter" class="pl.edu.amu.dji.jms.lab4.message.PriceChangeConverter">
+    </bean>
+
+    <bean id="reportQueue" class="org.apache.activemq.command.ActiveMQQueue">
+        <constructor-arg value="reportQueue"/>
+    </bean>
+    <bean id="salesInformationConverter" class="pl.edu.amu.dji.jms.lab4.message.SalesInformationConverter">
+    </bean>
+
+    <bean id="pointOfSalesService" class="pl.edu.amu.dji.jms.lab4.pointOfSales.PointOfSalesService">
+    </bean>
+
+    <bean id="updatePriceAdapter" class="org.springframework.jms.listener.adapter.MessageListenerAdapter">
+        <property name="delegate" ref="pointOfSalesService"/>
+        <property name="defaultListenerMethod" value="updatePrice"/>
+        <property name="messageConverter" ref="priceChangeConverter"/>
+    </bean>
+    <bean id="messageListenerContainer1" class="org.springframework.jms.listener.DefaultMessageListenerContainer">
+        <property name="sessionTransacted" value="true"/>
+        <property name="messageListener" ref="updatePriceAdapter"/>
+        <property name="connectionFactory" ref="connectionFactory"/>
+        <property name="destination" ref="priceChangeTopic"/>
+    </bean>
+
+    <bean id="updateProductListAdapter" class="org.springframework.jms.listener.adapter.MessageListenerAdapter">
+        <property name="delegate" ref="pointOfSalesService"/>
+        <property name="defaultListenerMethod" value="updateProductList"/>
+        <property name="messageConverter" ref="fullProductListConverter"/>
+    </bean>
+    <bean id="messageListenerContainer2" class="org.springframework.jms.listener.DefaultMessageListenerContainer">
+        <property name="sessionTransacted" value="true"/>
+        <property name="messageListener" ref="updateProductListAdapter"/>
+        <property name="connectionFactory" ref="connectionFactory"/>
+        <property name="destination" ref="fullProductListTopic"/>
+    </bean>
+
+
+</beans>
