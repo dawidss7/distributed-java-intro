@@ -24,7 +24,7 @@ public class AnalysisApp {
         System.out.println("1. CHECK REPORT;");
     }
     private static void checkReportOption() throws IOException {
-        System.out.print("SOLD PRODUCTS: ");
+        System.out.println("SOLD PRODUCTS: ");
         reportService.getSalesInformations().forEach((salesInformation)-> System.out.println(salesInformation.getName()+ " " + salesInformation.getPrice()+"$"));
     }
 

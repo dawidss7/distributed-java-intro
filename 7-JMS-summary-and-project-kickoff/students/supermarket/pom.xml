@@ -11,7 +11,6 @@
         <module>warehouse</module>
         <module>analysis</module>
         <module>common</module>
-        <module>prototype</module>
     </modules>
     <packaging>pom</packaging>
 
