@@ -3,6 +3,8 @@ package com.uam.akka.exercise1.actor;
 import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import com.uam.akka.exercise1.message.Answer;
+import com.uam.akka.exercise1.message.Question;
 
 public class Receiver extends UntypedActor {
 
@@ -10,5 +12,10 @@ public class Receiver extends UntypedActor {
 
 	@Override
 	public void onReceive(Object o) throws Exception {
+		if (o instanceof Question){
+			log.info(((Question) o).getText());
+			Answer answer = new Answer("Odpowiedź");
+			getSender().tell(answer, getSelf());
+		}
 	}
 }
